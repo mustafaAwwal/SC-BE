@@ -3,6 +3,7 @@ const express  = require("express");
 var bodyParser = require('body-parser')
 var jwt        = require('jsonwebtoken')
 const cors     = require('cors')
+var bcrypt = require('bcrypt-nodejs');
 
 var corsOptions = {
   origin: 'http://localhost:4200',
@@ -11,8 +12,8 @@ const app = express();
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(cors(corsOptions))
-// mongoose.connect("mongodb+srv://mustafa:lambghini@techshop-namus.mongodb.net/test?retryWrites=true",{ useNewUrlParser: true});
-mongoose.connect("mongodb://localhost:27017");
+mongoose.connect("mongodb+srv://mustafa:lambghini@techshop-namus.mongodb.net/test?retryWrites=true",{ useNewUrlParser: true});
+// mongoose.connect("mongodb://localhost:27017");
 var db = mongoose.connection;
 db.on('error', console.error.bind(console, 'connection error:'));
 db.once('open', function() {
@@ -54,6 +55,8 @@ app.post("/users/create",function(req, res){
   var password = req.body.password;
   var address = req.body.address;
   var type;
+  var password = bcrypt.hashSync(password);
+  console.log(password);
   if (req.body.accountType) {
     type = req.body.accountType;
   }
@@ -93,7 +96,7 @@ app.post('/login',(req,res)=>{
       console.log(err);
     }
     else if (user){
-      if(password == user.password) {
+      if(bcrypt.compareSync(password,user.password)) {
         const token  = jwt.sign({}, RSA_priivate_key,{
           algorithm: 'HS256',
           expiresIn: 30
