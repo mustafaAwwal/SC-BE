@@ -4,6 +4,7 @@ var bodyParser = require('body-parser')
 var jwt        = require('jsonwebtoken')
 const cors     = require('cors')
 var bcrypt = require('bcrypt-nodejs');
+var autoIncrement = require('mongoose-auto-increment');
 
 var corsOptions = {
   origin: 'http://localhost:4200',
@@ -15,6 +16,7 @@ app.use(cors(corsOptions))
 mongoose.connect("mongodb+srv://mustafa:lambghini@techshop-namus.mongodb.net/test?retryWrites=true",{ useNewUrlParser: true});
 // mongoose.connect("mongodb://localhost:27017");
 var db = mongoose.connection;
+autoIncrement.initialize(db);
 db.on('error', console.error.bind(console, 'connection error:'));
 db.once('open', function() {
   console.log("we are connected");
@@ -35,17 +37,8 @@ var userSchema = new mongoose.Schema(
     accountType: {type: String, required: true, default: "user"}
   }
 );
+userSchema.plugin(autoIncrement.plugin, 'user');
 var user = mongoose.model('user',userSchema);
-
-userSchema.method.findByEmail = function findByEmail(email) {
-  this.model('user').findOne({emailAddress: email},'password accountType',(err,user)=>{
-    if(err) {
-      return false;
-    
-    }
-    else return user;
-  });
-};
 
 app.post("/users/create",function(req, res){
   var firstName = req.body.firstName;
@@ -119,10 +112,17 @@ app.post('/login',(req,res)=>{
   });
 }
 );
-
-// app.get("/user",function(req,res){
-  
-// });
+app.get("/user",function(req,res){
+  var email = req.body.emailAddress;
+  user.findOne({emailAddress: email},(err,user)=>{
+    if(err){
+      console.log(err);
+    }
+    else {
+      res.send(user);
+    }
+  });
+});
 app.get('*',function(req,res){
   res.send("Cannot find the specified link").json();
 });
