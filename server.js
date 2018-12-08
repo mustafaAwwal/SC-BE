@@ -24,7 +24,9 @@ db.once('open', function() {
 
 const RSA_priivate_key = "616161"
 
-
+function middleWare(token) {
+  console.log(token);
+}
 
 var userSchema = new mongoose.Schema(
   {
@@ -84,20 +86,22 @@ app.post("/users/create",function(req, res){
 app.post('/login',(req,res)=>{
   var emailAddress = req.body.email;
   var password = req.body.password;
-  user.findOne({emailAddress : emailAddress},'password accountType',(err,user)=>{
+  user.findOne({emailAddress : emailAddress},'password accountType _id',(err,user)=>{
     if(err){
       console.log(err);
     }
     else if (user){
+      console.log(user._id);
       if(bcrypt.compareSync(password,user.password)) {
         const token  = jwt.sign({}, RSA_priivate_key,{
           algorithm: 'HS256',
-          expiresIn: 30
+          expiresIn: 1800
         });
         res.status(200).json({
           token: token,
           accountType: user.accountType,
-          expiresIn: 120
+          expiresIn: 120,
+          id: user._id
           
         });
       }
@@ -112,14 +116,45 @@ app.post('/login',(req,res)=>{
   });
 }
 );
+var verification = function(req,res,next){
+  var token = req.get('token');
+  if(token){
+    console.log(token)
+    jwt.verify(token,RSA_priivate_key,function(err,decoded){
+      if(err){
+        console.log('error');
+        res.json(
+          {
+            token: null,
+            user : null
+          }
+        );
+      }
+      else {
+        next();
+      }
+    })
+  }
+}
+app.use(verification);
 app.get("/user",function(req,res){
-  var email = req.body.emailAddress;
-  user.findOne({emailAddress: email},(err,user)=>{
+  var id = req.get('id');
+  var token = req.get('token');
+  console.log(id);
+  user.findOne({_id: id},'-password -__v',(err,user)=>{
     if(err){
-      console.log(err);
+      console.log(err,'something');
+    }
+    else if(user){
+      console.log('sending');
+      res.json({
+        token: token,
+        user: user
+      });
     }
     else {
-      res.send(user);
+      console.log("found nothing");
+      res.json({token: null,user: null});
     }
   });
 });
