@@ -42,6 +42,45 @@ var userSchema = new mongoose.Schema(
 userSchema.plugin(autoIncrement.plugin, 'user');
 var user = mongoose.model('user',userSchema);
 
+let itemSchema = new mongoose.Schema({
+  name: {type: String, required: true},
+  brand: {type: String, required: true},
+  price: {type: Number, required: true},
+  amount: {type: Number, required: true},
+  category: {type: String, required: true},
+  image : {type: String,required: true},
+  detail: {type: String, required: true},
+  owner: {type: String, required: true, default: "admin"}
+
+
+})
+itemSchema.plugin(autoIncrement.plugin,'item');
+item = mongoose.model('item',itemSchema);
+
+//middlware for token verifiction
+var verification = function(req,res,next){
+  var token = req.get('token');
+  
+  if(token){
+    console.log(token)
+    jwt.verify(token,RSA_priivate_key,function(err,decoded){
+      if(err){
+        console.log('error');
+        res.json(
+          {
+            token: null,
+            user : null
+          }
+        );
+      }
+      else {
+        next();
+      }
+    })
+  }
+}
+
+//Post method to create a user
 app.post("/users/create",function(req, res){
   var firstName = req.body.firstName;
   var lastName  = req.body.lastName;
@@ -83,6 +122,60 @@ app.post("/users/create",function(req, res){
   ); 
 
 });
+
+
+//post method to create a item
+app.post('/item/create',verification,(req,res)=>{
+  var name,brand,price,amount,category,detail,image;
+  let token = req.get('token');
+  name  = req.body.name;
+  brand = req.body.brand;
+  price = req.body.price;
+  price = parseInt(price);
+  amount= req.body.amount;
+  amount = parseInt(amount);
+  detail= req.body.detail;
+  image = req.body.image;
+  category = req.body.category;
+  let owner;  
+  if (req.body.owner) {
+    owner = req.body.owner;
+  }
+  item.create({
+    name: name,
+    brand: brand,
+    price: price,
+    amount: amount,
+    category: category,
+    image : image,
+    detail: detail,
+    owner: owner
+  }
+    
+  ,(err,item)=>{
+    if(err){
+      console.log(err);
+      res.json({error:'asddsfdsf',token: token})
+    }
+    else {
+      res.json({creation: true,token: token})
+    }
+  });
+});
+
+app.get('/item',(req,res)=>{
+  item.find({},(err,user)=>{
+    if(err){}
+    else {
+     
+      console.log(user)
+    }
+    
+  });
+  
+})
+
+//Post method to for login
 app.post('/login',(req,res)=>{
   var emailAddress = req.body.email;
   var password = req.body.password;
@@ -116,28 +209,10 @@ app.post('/login',(req,res)=>{
   });
 }
 );
-var verification = function(req,res,next){
-  var token = req.get('token');
-  if(token){
-    console.log(token)
-    jwt.verify(token,RSA_priivate_key,function(err,decoded){
-      if(err){
-        console.log('error');
-        res.json(
-          {
-            token: null,
-            user : null
-          }
-        );
-      }
-      else {
-        next();
-      }
-    })
-  }
-}
-app.use(verification);
-app.get("/user",function(req,res){
+
+
+//post method for getting a specific user
+app.get("/user",verification,function(req,res){
   var id = req.get('id');
   var token = req.get('token');
   console.log(id);
