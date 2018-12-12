@@ -165,8 +165,10 @@ app.post('/item/create',verification,(req,res)=>{
 });
 
 app.get('/item',(req,res)=>{
-  item.find({},'-amount',(err,item)=>{
-    if(err){}
+  item.find({},(err,item)=>{
+    if(err){
+      res.json({error: 'found nothing'});
+    }
     else {
      
       res.json(item);
