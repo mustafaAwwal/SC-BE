@@ -6,6 +6,7 @@ const cors     = require('cors')
 var bcrypt = require('bcrypt-nodejs');
 var autoIncrement = require('mongoose-auto-increment');
 
+
 var corsOptions = {
   origin: 'http://localhost:4200',
 }
@@ -155,7 +156,7 @@ app.post('/item/create',verification,(req,res)=>{
   ,(err,item)=>{
     if(err){
       console.log(err);
-      res.json({error:'asddsfdsf',token: token})
+      res.json({error:'creation error',token: token})
     }
     else {
       res.json({creation: true,token: token})
@@ -164,11 +165,11 @@ app.post('/item/create',verification,(req,res)=>{
 });
 
 app.get('/item',(req,res)=>{
-  item.find({},(err,user)=>{
+  item.find({},'-amount',(err,item)=>{
     if(err){}
     else {
      
-      console.log(user)
+      res.json(item);
     }
     
   });
