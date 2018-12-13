@@ -29,6 +29,8 @@ function middleWare(token) {
   console.log(token);
 }
 
+
+//User schema 
 var userSchema = new mongoose.Schema(
   {
     firstName: {type : String,required : true},
@@ -43,6 +45,7 @@ var userSchema = new mongoose.Schema(
 userSchema.plugin(autoIncrement.plugin, 'user');
 var user = mongoose.model('user',userSchema);
 
+//Item schema 
 let itemSchema = new mongoose.Schema({
   name: {type: String, required: true},
   brand: {type: String, required: true},
@@ -56,14 +59,32 @@ let itemSchema = new mongoose.Schema({
 
 })
 itemSchema.plugin(autoIncrement.plugin,'item');
-item = mongoose.model('item',itemSchema);
+var item = mongoose.model('item',itemSchema);
+
+
+//orderSchema
+
+let orderSchema = new mongoose.Schema({
+  productId       : {type: Number, required: true},
+  productName     : {type: String, required: true},
+  productPrice    : {type: Number, required: true},
+  orderStatus   : {type: String, required: true, default: 'Pending'},
+  user_id         : {type: Number, required: true},
+  username        : {type: String, required: true},
+  user_address    : {type: String, required: true},
+  user_phoneNumber: {type: String, required: true}
+})
+orderSchema.plugin(autoIncrement.plugin,'order');
+var order = mongoose.model('order',orderSchema);
 
 //middlware for token verifiction
 var verification = function(req,res,next){
   var token = req.get('token');
+  var id    = req.get('id');
   
   if(token){
     console.log(token)
+    console.log(jwt.decode(token));
     jwt.verify(token,RSA_priivate_key,function(err,decoded){
       if(err){
         console.log('error');
@@ -75,7 +96,16 @@ var verification = function(req,res,next){
         );
       }
       else {
-        next();
+        if(id == decoded.id){
+          next();
+        }
+        else {
+          res.json(
+            {
+              token: null,
+              user : null
+            })
+        }
       }
     })
   }
@@ -164,6 +194,7 @@ app.post('/item/create',verification,(req,res)=>{
   });
 });
 
+// returns item list
 app.get('/item',(req,res)=>{
   item.find({},(err,item)=>{
     if(err){
@@ -178,6 +209,91 @@ app.get('/item',(req,res)=>{
   
 })
 
+//SIngle item get
+app.get('/item/:id',(req,res)=>{
+  let id = req.params.id;
+  item.findOne({_id:id},(err,item)=>{
+    if(err){
+      res.json({error: err});
+    }
+    else if(item !== null){
+      res.json(item);
+    }
+    else {
+      res.json({error: 'could not find anything'})
+    }
+  })
+  console.log(id);
+});
+
+//creating a order 
+app.get('/order/create', (req,res)=>{
+  let productId = req.body.item_id;
+  let userId = req.body.user_id;
+  username = "";
+  user_address = "";
+  user_phoneNumber = "";
+  let orderStatus;
+  if(req.body.status){
+    orderStatus = req.body.status;
+  }
+  user.findById(userId,'firstName lastName address phoneNumber',(err,user)=>{
+    username = user.firstName + user.lastName;
+    user_address = user.address;
+    user_phoneNumber = user.phoneNumber;
+  });
+ 
+  item.findById(productId, 'amount name price', (err,Item)=>{
+    
+    if(err){
+      console.log(err)
+    }
+    else {
+      if(Item.amount > 0){
+        Item.amount -= 1;
+        Item.save((err,updItem)=>{
+          if(err){
+
+          }
+          else {
+            console.log(productId,Item.name,Item.price,orderStatus,username,userId,user_address,user_phoneNumber);
+            order.create({
+              productId       : productId,
+              productName     : Item.name,
+              productPrice    : Item.price,
+              orderStatus     : orderStatus,
+              user_id         : userId,
+              username        : username,
+              user_address    : user_address,
+              user_phoneNumber: user_phoneNumber
+            },(err,order)=>{
+              if(err){
+                res.json({message: false});
+              }
+              else {
+                res.json({message: true});
+              }
+
+            })
+          }
+        });
+      }
+      else {
+        res.json(
+          {updItem: null,
+          massage: 'item is unavailable'
+        });
+      }
+    }
+
+  });
+});
+
+
+//Getting orders by id
+
+
+
 //Post method to for login
 app.post('/login',(req,res)=>{
   var emailAddress = req.body.email;
@@ -189,7 +305,7 @@ app.post('/login',(req,res)=>{
     else if (user){
       console.log(user._id);
       if(bcrypt.compareSync(password,user.password)) {
-        const token  = jwt.sign({}, RSA_priivate_key,{
+        const token  = jwt.sign({id: user._id, accountType: user.accountType}, RSA_priivate_key,{
           algorithm: 'HS256',
           expiresIn: 1800
         });
