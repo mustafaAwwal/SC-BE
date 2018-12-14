@@ -228,9 +228,9 @@ app.get('/item/:id',(req,res)=>{
 });
 
 //creating a order 
-app.get('/order/create', verification,(req,res)=>{
+app.post('/order/create', verification,(req,res)=>{
   let productId = req.body.item_id;
-  let userId = req.body.user_id;
+  let userId = req.get('id');
   var username = "";
   var user_address = "";
   var user_phoneNumber = "";
@@ -294,7 +294,21 @@ app.get('/order/create', verification,(req,res)=>{
 
 
 //Getting orders by id
+app.get('/order/:id',verification,(req,res)=>{
 
+  var id = req.params.id;
+  order.find({owner_id: id},(err,orders)=>{
+    if(err){
+      res.json(null);
+    }
+    else if(orders){
+      res.json(orders);
+    }
+  })
+
+
+
+});
 
 
 //Post method to for login
