@@ -54,7 +54,7 @@ let itemSchema = new mongoose.Schema({
   category: {type: String, required: true},
   image : {type: String,required: true},
   detail: {type: String, required: true},
-  owner: {type: String, required: true, default: "admin"}
+  owner_id: {type: Number, required: true}
 
 
 })
@@ -65,10 +65,11 @@ var item = mongoose.model('item',itemSchema);
 //orderSchema
 
 let orderSchema = new mongoose.Schema({
+  owner_id        : {type: Number, required: true},
   productId       : {type: Number, required: true},
   productName     : {type: String, required: true},
   productPrice    : {type: Number, required: true},
-  orderStatus   : {type: String, required: true, default: 'Pending'},
+  orderStatus     : {type: String, required: true, default: 'Pending'},
   user_id         : {type: Number, required: true},
   username        : {type: String, required: true},
   user_address    : {type: String, required: true},
@@ -159,6 +160,9 @@ app.post("/users/create",function(req, res){
 app.post('/item/create',verification,(req,res)=>{
   var name,brand,price,amount,category,detail,image;
   let token = req.get('token');
+  let owner_id    = req.get('id');
+  console.log('item create request is: ',owner_id)
+  
   name  = req.body.name;
   brand = req.body.brand;
   price = req.body.price;
@@ -168,10 +172,7 @@ app.post('/item/create',verification,(req,res)=>{
   detail= req.body.detail;
   image = req.body.image;
   category = req.body.category;
-  let owner;  
-  if (req.body.owner) {
-    owner = req.body.owner;
-  }
+  
   item.create({
     name: name,
     brand: brand,
@@ -180,7 +181,7 @@ app.post('/item/create',verification,(req,res)=>{
     category: category,
     image : image,
     detail: detail,
-    owner: owner
+    owner_id: owner_id
   }
     
   ,(err,item)=>{
@@ -227,13 +228,14 @@ app.get('/item/:id',(req,res)=>{
 });
 
 //creating a order 
-app.get('/order/create', (req,res)=>{
+app.get('/order/create', verification,(req,res)=>{
   let productId = req.body.item_id;
   let userId = req.body.user_id;
-  username = "";
-  user_address = "";
-  user_phoneNumber = "";
+  var username = "";
+  var user_address = "";
+  var user_phoneNumber = "";
   let orderStatus;
+  var owner_id = req.body.owner_id;
   if(req.body.status){
     orderStatus = req.body.status;
   }
@@ -258,6 +260,7 @@ app.get('/order/create', (req,res)=>{
           else {
             console.log(productId,Item.name,Item.price,orderStatus,username,userId,user_address,user_phoneNumber);
             order.create({
+              owner_id        : owner_id,
               productId       : productId,
               productName     : Item.name,
               productPrice    : Item.price,
