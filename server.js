@@ -226,18 +226,16 @@ app.get('/item',(req,res)=>{
 })
 
 //SIngle item get
-app.get('/item/:id',(req,res)=>{
-  let id = req.params.id;
-  item.findOne({_id:id},(err,item)=>{
+app.get('/shopItems',verification,(req,res)=>{
+  var token = req.get('token');
+  item.find({owner_id:id},(err,item)=>{
     if(err){
-      res.json({error: err});
+      res.json({token: token,shopItems: null});
     }
-    else if(item !== null){
-      res.json(item);
+    else{
+      res.json({token: token, shopItems: item});
     }
-    else {
-      res.json({error: 'could not find anything'})
-    }
+    
   })
   console.log(id);
 });
@@ -383,6 +381,20 @@ app.get('/shopRequests',verification,(req,res)=>{
     }
     else {
       res.json({token: token,shopRequests: shopRequests});
+    }
+  })
+})
+
+app.post('/shop/upgrade/:owner_id',verification,(req,res)=>{
+  var token = req.get('token');
+  var owner_id = req.params.owner_id;
+  console.log(owner_id);
+  shop.findOneAndUpdate({owner_id:owner_id},{shopPrivilages:true},(err,doc)=>{
+    if(err){
+      res.json({token:token,result:false})
+    }
+    else {
+      res.json({token:token,result:true});
     }
   })
 })
