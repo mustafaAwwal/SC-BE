@@ -78,6 +78,21 @@ let orderSchema = new mongoose.Schema({
 orderSchema.plugin(autoIncrement.plugin,'order');
 var order = mongoose.model('order',orderSchema);
 
+
+// Shop Schema 
+
+let shopSchema = new mongoose.Schema({
+  owner_id: {type: Number, required: true},
+  shopPrivilages: {type: Boolean, required: true, default: false},
+  shopRequest   : {type: Boolean, required: true, default: true},
+  shopOwner     : {type: String,required: true},
+  shopAddress   : {type: String,required: true},
+  shopNumber    : {type: String, required: true}
+});
+shopSchema.plugin(autoIncrement.plugin,'shop');
+var shop = mongoose.model('shop',shopSchema);
+
+
 //middlware for token verifiction
 var verification = function(req,res,next){
   var token = req.get('token');
@@ -273,7 +288,7 @@ app.post('/order/create', verification,(req,res)=>{
               user_phoneNumber: user_phoneNumber
             },(err,order)=>{
               if(err){
-                res.json({token: null,message: false});
+                res.json({token: token,message: false});
               }
               else {
                 res.json({token: token,message: true});
@@ -331,6 +346,47 @@ app.get('/order/user/:id',verification,(req,res)=>{
 
 
 });
+
+
+// Shop creation and notifications area 
+
+// Shop Request making area
+
+app.post('/shop/request',verification,(req,res)=>{
+   var id = req.get('id');
+   var token = req.get('token');
+   console.log(req.body);
+   var owner   = req.body.shopOwner;
+   var address = req.body.shopAddress;
+   var number  = req.body.shopNumber;
+   shop.create({
+    owner_id: id,
+    shopOwner: owner,
+    shopAddress: address,
+    shopNumber : number
+   },(err,shopRequest)=>{
+     if(err){
+       res.json({token: token,result: false});
+     }
+     else if(shopRequest){
+       res.json({token: token, result: true})
+     }
+   })
+});
+
+app.get('/shopRequests',verification,(req,res)=>{
+  var token = req.get('token');
+  shop.find({},"-__v",(err,shopRequests)=>{
+    if(err){
+      console.log(err);
+      res.json({token: token,shopRequests: null});
+    }
+    else {
+      res.json({token: token,shopRequests: shopRequests});
+    }
+  })
+})
+
 
 //Post method to for login
 app.post('/login',(req,res)=>{
