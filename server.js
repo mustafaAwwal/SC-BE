@@ -229,8 +229,10 @@ app.get('/item/:id',(req,res)=>{
 
 //creating a order 
 app.post('/order/create', verification,(req,res)=>{
+  
   let productId = req.body.item_id;
   let userId = req.get('id');
+  var token = req.get('token');
   var username = "";
   var user_address = "";
   var user_phoneNumber = "";
@@ -271,10 +273,10 @@ app.post('/order/create', verification,(req,res)=>{
               user_phoneNumber: user_phoneNumber
             },(err,order)=>{
               if(err){
-                res.json({message: false});
+                res.json({token: null,message: false});
               }
               else {
-                res.json({message: true});
+                res.json({token: token,message: true});
               }
 
             })
@@ -283,8 +285,8 @@ app.post('/order/create', verification,(req,res)=>{
       }
       else {
         res.json(
-          {updItem: null,
-          massage: 'item is unavailable'
+          {token: token,
+          massage: false
         });
       }
     }
@@ -295,14 +297,15 @@ app.post('/order/create', verification,(req,res)=>{
 
 //Getting orders by id
 app.get('/order/:id',verification,(req,res)=>{
-
+  var token = req.get('token');
   var id = req.params.id;
   order.find({owner_id: id},(err,orders)=>{
     if(err){
       res.json(null);
     }
     else if(orders){
-      res.json(orders);
+      
+      res.json({token: token,order: orders});
     }
   })
 
@@ -310,6 +313,24 @@ app.get('/order/:id',verification,(req,res)=>{
 
 });
 
+//Geting user orders 
+
+app.get('/order/user/:id',verification,(req,res)=>{
+  var token = req.get('token');
+  var id = req.params.id;
+  order.find({user_id: id},(err,orders)=>{
+    if(err){
+      console.log(err);
+      res.json(null);
+    }
+    else if(orders){
+      res.json({token: token,orders});
+    }
+  })
+
+
+
+});
 
 //Post method to for login
 app.post('/login',(req,res)=>{
