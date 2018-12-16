@@ -318,7 +318,7 @@ app.get('/order/:id',verification,(req,res)=>{
     }
     else if(orders){
       
-      res.json({token: token,order: orders});
+      res.json({token: token,orders: orders});
     }
   })
 
