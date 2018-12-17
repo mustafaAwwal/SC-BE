@@ -225,6 +225,48 @@ app.get('/item',(req,res)=>{
   
 })
 
+//Items upgrade level 
+
+app.post('/order/update',verification,(req,res)=>{
+  console.log('in update item');
+  var order_id = req.body.order_id;
+  var token = req.get('token');
+  var newStatus  = req.body.orderStatus;
+  
+    order.findOneAndUpdate({_id: order_id},{orderStatus: newStatus},(err,updated)=>{
+      if(err){
+        console.log('err');
+        res.json({token:token,result:false});
+      }
+      else {
+        console.log('asiudashdkasudasuhdasuhdiuewhhiwuheqwiueh');
+        res.json({token:token,result:true});
+      }
+    })
+  }
+);
+
+app.post('/order/delete',verification,(req,res)=>{
+  console.log('in delete item');
+  var order_id = req.body.order_id;
+  var item_id  = req.body.item_id;
+  var token = req.get('token');
+    order.findOneAndDelete({_id: order_id},(err,updated)=>{
+      if(err){
+        console.log('err');
+        res.json({token:token,result:false});
+      }
+      else {
+        console.log('asiudashdkasudasuhdasuhdiuewhhiwuheqwiueh');
+        item.findById(item_id,'amount',(err,Item)=>{
+          Item.amount = Item.amount + 1;
+          Item.save();
+        })
+        res.json({token:token,result:true});
+      }
+    })
+})
+
 //SIngle item get
 app.get('/shopItems',verification,(req,res)=>{
   var token = req.get('token');
