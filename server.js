@@ -270,6 +270,8 @@ app.post('/order/delete',verification,(req,res)=>{
 //SIngle item get
 app.get('/shopItems',verification,(req,res)=>{
   var token = req.get('token');
+  var id    = req.get('id');
+  console.log(token,id);
   item.find({owner_id:id},(err,item)=>{
     if(err){
       res.json({token: token,shopItems: null});
