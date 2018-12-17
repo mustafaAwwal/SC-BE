@@ -458,6 +458,21 @@ app.post('/shop/downgrade/:owner_id',verification,(req,res)=>{
 })
 
 
+app.get('/shop',verification,(req,res)=>{
+  var token = req.get('token');
+  var id    = req.get('id');
+  console.log(id);
+  shop.findOne({owner_id: id},'-__V',(err,Shop)=>{
+    if(err){
+
+      res.json({token:token,shop: null});
+    }
+    else{
+      res.json({token:token,shop: Shop});
+    }
+  });
+})
+
 
 //Post method to for login
 app.post('/login',(req,res)=>{
