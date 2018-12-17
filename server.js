@@ -443,6 +443,21 @@ app.post('/shop/upgrade/:owner_id',verification,(req,res)=>{
   })
 })
 
+app.post('/shop/downgrade/:owner_id',verification,(req,res)=>{
+  var token = req.get('token');
+  var owner_id = req.params.owner_id;
+  console.log(owner_id);
+  shop.findOneAndUpdate({owner_id:owner_id},{shopPrivilages:false},(err,doc)=>{
+    if(err){
+      res.json({token:token,result:false})
+    }
+    else {
+      res.json({token:token,result:true});
+    }
+  })
+})
+
+
 
 //Post method to for login
 app.post('/login',(req,res)=>{
