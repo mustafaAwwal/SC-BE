@@ -36,7 +36,8 @@ var usrSchema = new mongoose.Schema(
     username: {type : String,required : true},
     password: {type : String, required : true },
     emailAddress: {type : String,required : true },
-    accountType: {type: String, required: true, default: "student"}
+    accountType: {type: String, required: true, default: "student"},
+    subject: {type: String, required: true, default: "professional ethics"}
   }
 );
 usrSchema.plugin(autoIncrement.plugin, 'usr');
@@ -47,7 +48,8 @@ let videoSchema = new mongoose.Schema({
   teacherName: {type: String, required: true},
   teacherId: {type: Number , required: true},
   topic: {type: String, required: true},
-  videoUrl: {type: String, required: true}
+  videoUrl: {type: String, required: true},
+  subject: {type: String, require: true}
 
 
 })
@@ -60,6 +62,7 @@ app.post("/users/create",function(req, res){
   var username = req.body.username;
   var emailAddress = req.body.emailAddress;
   var password = req.body.password;
+  let subject = req.body.subject;
   var type;
   var password = bcrypt.hashSync(password);
   console.log(password);
@@ -73,7 +76,8 @@ app.post("/users/create",function(req, res){
       username : username,
       emailAddress : emailAddress,
       password: password,
-      accountType: type
+      accountType: type,
+      subject: subject
     },
     function(err,command){
       if(err) {
@@ -97,7 +101,7 @@ app.post("/users/create",function(req, res){
 
 //uploading a video on database
 app.post('/video/create',(req,res)=>{
-  let topic,teacherName,videoUrl,teacherId;
+  let topic,teacherName,videoUrl,teacherId,subject;
   
   teacherId = req.body.teacherId
   console.log('item create request is: ',teacherId)
@@ -106,12 +110,14 @@ app.post('/video/create',(req,res)=>{
   topic  = req.body.topic;
   teacherName = req.body.teacherName;
   videoUrl = req.body.videoUrl;
+  subject = req.body.subject;
   
   video.create({
     teacherName: teacherName,
     topic: topic,
     videoUrl:videoUrl,
-    teacherId: teacherId
+    teacherId: teacherId,
+    subject: subject
   }
     
   ,(err,video)=>{
@@ -133,7 +139,7 @@ app.get('/video',(req,res)=>{
     }
     else {
      
-      res.json(video);
+      res.json({videos: video});
     }
     
   });
@@ -150,7 +156,7 @@ app.get('/video/user/:id',(req,res)=>{
       res.json(null);
     }
     else if(video){
-      res.json({video});
+      res.json({videos: video});
     }
   })
 
@@ -166,7 +172,7 @@ app.post('/login',(req,res)=>{
   let emailAddress = req.body.emailAddress;
   let password = req.body.password;
   console.log(req.body);
-  usr.findOne({emailAddress : emailAddress},'password accountType _id',(err,usr)=>{
+  usr.findOne({emailAddress : emailAddress},'password accountType _id username',(err,usr)=>{
     if(err){
       console.log(err);
     }
@@ -176,7 +182,8 @@ app.post('/login',(req,res)=>{
        
         res.json({
           accountType: usr.accountType,
-          id: usr._id
+          id: usr._id,
+          username: usr.username
           
         });
       }
@@ -196,7 +203,7 @@ app.post('/login',(req,res)=>{
 //post method for getting a specific user
 app.get("/user/:id",function(req,res){
   var id = req.params.id;
-  usr.findOne({_id: id},(err,usr)=>{
+  usr.findOne({_id: id},'-password',(err,usr)=>{
     if(err){
       console.log(err,'something');
     }
