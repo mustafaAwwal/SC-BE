@@ -36,7 +36,7 @@ var usrSchema = new mongoose.Schema(
     username: {type : String,required : true},
     password: {type : String, required : true },
     emailAddress: {type : String,required : true },
-    accountType: {type: String, required: true, default: "student"},
+    accountType: {type: String, required: true, default: "Student"},
     subject: {type: String, required: true, default: "professional ethics"}
   }
 );
@@ -199,7 +199,14 @@ app.post('/login',(req,res)=>{
 }
 );
 
+app.get('/user',(req,res)=>{
 
+  usr.find({},'-password',(err,usr)=>{
+    console.log("we are trying to ding");
+    res.json({users:usr})
+  })
+
+})
 //post method for getting a specific user
 app.get("/user/:id",function(req,res){
   var id = req.params.id;
@@ -219,6 +226,9 @@ app.get("/user/:id",function(req,res){
     }
   });
 });
+
+
+
 app.get('*',function(req,res){
   res.send("Cannot find the specified link").json();
 });
